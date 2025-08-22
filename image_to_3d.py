@@ -20,8 +20,17 @@ class ImageTo3DConverter:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
         
-        # Load MiDaS model
-        self.midas = torch.hub.load("intel-isl/MiDaS", model_type)
+        # Load MiDaS model with trust_repo=True to bypass rate limit
+        try:
+            self.midas = torch.hub.load("intel-isl/MiDaS", model_type, trust_repo=True)
+        except Exception as e:
+            print(f"Failed to load {model_type}, trying MiDaS_small...")
+            try:
+                self.midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
+            except Exception as e2:
+                print(f"Failed to load any MiDaS model: {e2}")
+                raise e2
+        
         self.midas.to(self.device)
         self.midas.eval()
         
